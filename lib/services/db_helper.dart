@@ -13,14 +13,23 @@ class DBHelper {
     _database = await openDatabase(
       path,
       version: 1,
-      onCreate: (db, version) {
-        return db.execute('''
+      onCreate: (db, version) async {
+        await db.execute('''
           CREATE TABLE expenses(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             amount REAL,
             category TEXT,
             description TEXT,
             date TEXT
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE budgets(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            amount REAL,
+            startDate TEXT,
+            endDate TEXT
           )
         ''');
       },
@@ -31,62 +40,54 @@ class DBHelper {
 
   // INSERT
   static Future<int> insertExpense(Expense e) async {
-  final db = await getDatabase();
+    final db = await getDatabase();
 
-  return await db.insert(
-    'expenses',
-    {
+    return await db.insert('expenses', {
       'amount': e.amount,
       'category': e.category,
       'description': e.description,
       'date': e.date.toIso8601String(),
-    },
-  );
-}
+    });
+  }
 
   // FETCH
   static Future<List<Expense>> getExpenses() async {
-  final db = await getDatabase();
+    final db = await getDatabase();
 
-  final List<Map<String, dynamic>> maps =
-      await db.query('expenses');
+    final List<Map<String, dynamic>> maps = await db.query('expenses');
 
-  return maps.map((map) {
-    return Expense(
-      id: map['id'],
-      amount: map['amount'],
-      category: map['category'],
-      description: map['description'],
-      date: DateTime.parse(map['date']),
-    );
-  }).toList();
-}
+    return maps.map((map) {
+      return Expense(
+        id: map['id'],
+        amount: map['amount'],
+        category: map['category'],
+        description: map['description'],
+        date: DateTime.parse(map['date']),
+      );
+    }).toList();
+  }
 
   // DELETE
   static Future<void> deleteExpense(int id) async {
-  final db = await getDatabase();
+    final db = await getDatabase();
 
-  await db.delete(
-    'expenses',
-    where: 'id = ?',
-    whereArgs: [id],
-  );
-}
+    await db.delete('expenses', where: 'id = ?', whereArgs: [id]);
+  }
+
   //UPDATE
   static Future<void> updateExpense(Expense e) async {
-  final db = await getDatabase();
+    final db = await getDatabase();
 
-  await db.update(
-    'expenses',
-    {
-      'amount': e.amount,
-      'category': e.category,
-      'description': e.description,
-      'date': e.date.toIso8601String(),
-    },
-    where: 'id = ?',
-    whereArgs: [e.id],
-  );
-}
-
+    await db.update(
+      'expenses',
+      {
+        'amount': e.amount,
+        'category': e.category,
+        'description': e.description,
+        'date': e.date.toIso8601String(),
+      },
+      where: 'id = ?',
+      whereArgs: [e.id],
+    );
+  }
 }

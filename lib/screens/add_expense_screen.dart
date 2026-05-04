@@ -20,51 +20,49 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   DateTime selectedDate = DateTime.now();
 
   @override
-    void initState() {
-      super.initState();
+  void initState() {
+    super.initState();
 
-      if (widget.existingExpense != null) {
-        amountController.text =
-            widget.existingExpense!.amount.toString();
+    if (widget.existingExpense != null) {
+      amountController.text = widget.existingExpense!.amount.toString();
 
-        descriptionController.text =
-            widget.existingExpense!.description;
+      descriptionController.text = widget.existingExpense!.description;
 
-        category = widget.existingExpense!.category;
-        selectedDate = widget.existingExpense!.date;
-      }
+      category = widget.existingExpense!.category;
+      selectedDate = widget.existingExpense!.date;
     }
+  }
 
   void submit() {
     final amount = double.tryParse(amountController.text);
 
     if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Enter valid amount")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Enter valid amount")));
       return;
     }
 
     if (selectedDate.isAfter(DateTime.now())) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Future date not allowed")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Future date not allowed")));
       return;
     }
 
-    String finalCategory =
-        isCustom ? customCategoryController.text : category;
+    String finalCategory = isCustom ? customCategoryController.text : category;
 
     if (finalCategory.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Enter category")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Enter category")));
       return;
     }
 
     Navigator.pop(
       context,
       Expense(
+        id: widget.existingExpense?.id, // MUST HAVE
         amount: amount,
         category: finalCategory,
         description: descriptionController.text,
@@ -112,12 +110,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             DropdownButton<String>(
               value: category,
               isExpanded: true,
-              items: ["Food","Clothing","Transportation", "Health","Entertainment", "Other"]
-                  .map((e) => DropdownMenuItem(
-                        value: e,
-                        child: Text(e),
-                      ))
-                  .toList(),
+              items: [
+                "Food",
+                "Clothing",
+                "Transportation",
+                "Health",
+                "Entertainment",
+                "Other",
+              ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
               onChanged: (val) {
                 setState(() {
                   category = val!;
@@ -137,21 +137,16 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             Row(
               children: [
                 Text(
-                    "Date: ${selectedDate.toLocal().toString().split(' ')[0]}"),
-                Spacer(),
-                TextButton(
-                  onPressed: pickDate,
-                  child: Text("Select Date"),
+                  "Date: ${selectedDate.toLocal().toString().split(' ')[0]}",
                 ),
+                Spacer(),
+                TextButton(onPressed: pickDate, child: Text("Select Date")),
               ],
             ),
 
             SizedBox(height: 10),
 
-            ElevatedButton(
-              onPressed: submit,
-              child: Text("Add Expense"),
-            )
+            ElevatedButton(onPressed: submit, child: Text("Add Expense")),
           ],
         ),
       ),

@@ -19,17 +19,17 @@ class _HomeScreenState extends State<HomeScreen> {
   Budget? budget;
 
   @override
-    void initState() {
-      super.initState();
-      loadExpenses();
-    }
+  void initState() {
+    super.initState();
+    loadExpenses();
+  }
 
-    void loadExpenses() async {
-      final data = await DBHelper.getExpenses();
-      setState(() {
-        expenses = data;
-      });
-    }
+  void loadExpenses() async {
+    final data = await DBHelper.getExpenses();
+    setState(() {
+      expenses = data;
+    });
+  }
 
   double getTotalExpense() {
     return expenses.fold(0, (sum, e) => sum + e.amount);
@@ -48,39 +48,39 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-    void deleteExpense(int index) {
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text("Are you sure you want to delete this expense?"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () async {
-                final expense = expenses[index];
+  void deleteExpense(int index) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text("Confirm Delete"),
+        content: Text("Are you sure you want to delete this expense?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () async {
+              final expense = expenses[index];
 
-                // ✅ DELETE FROM DATABASE
-                if (expense.id != null) {
-                  await DBHelper.deleteExpense(expense.id!);
-                }
+              // ✅ DELETE FROM DATABASE
+              if (expense.id != null) {
+                await DBHelper.deleteExpense(expense.id!);
+              }
 
-                // ✅ UPDATE UI
-                setState(() {
-                  expenses.removeAt(index);
-                });
+              // ✅ UPDATE UI
+              setState(() {
+                expenses.removeAt(index);
+              });
 
-                Navigator.pop(ctx);
-              },
-              child: Text("Delete", style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        ),
-      );
-    }
+              Navigator.pop(ctx);
+            },
+            child: Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
 
   void setBudget(Budget newBudget) {
     setState(() {
@@ -115,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
               if (result != null) setBudget(result);
             },
-          )
+          ),
         ],
       ),
       body: Column(
@@ -154,7 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 : ListView.builder(
                     itemCount: expenses.length,
                     itemBuilder: (context, index) {
-                       return ExpenseCard(
+                      return ExpenseCard(
                         expense: expenses[index],
                         onDelete: () => deleteExpense(index),
                         onEdit: () async {
@@ -168,6 +168,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           );
 
                           if (updated != null) {
+                            // 🔥 UPDATE DATABASE FIRST
+                            if (updated.id != null) {
+                              await DBHelper.updateExpense(updated);
+                            }
+
+                            // 🔥 THEN UPDATE UI
                             setState(() {
                               expenses[index] = updated;
                             });

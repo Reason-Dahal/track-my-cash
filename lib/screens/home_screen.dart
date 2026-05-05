@@ -3,8 +3,9 @@ import '../models/expense.dart';
 import '../models/budget.dart';
 import '../widgets/expense_card.dart';
 import 'add_expense_screen.dart';
-import 'budget_screen.dart';
+// import 'budget_screen.dart';
 import 'report_screen.dart';
+import 'budget_history_screen.dart';
 import '../services/db_helper.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -16,23 +17,32 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<Expense> expenses = [];
-  Budget? budget;
   List<Budget> budgets = [];
+  Budget? activeBudget;
+
+  double lastAlertPercent = 0;
 
   @override
   void initState() {
     super.initState();
-    loadExpenses();
-    loadBudgets();
+    loadData();
   }
 
-  void loadExpenses() async {
-    final data = await DBHelper.getExpenses();
+  // 🔥 LOAD EVERYTHING
+  void loadData() async {
+    final exp = await DBHelper.getExpenses();
+    final bud = await DBHelper.getBudgets();
+
     setState(() {
-      expenses = data;
+      expenses = exp;
+      budgets = bud;
+      activeBudget = getActiveBudget();
     });
+
+    checkBudgetAlerts();
   }
 
+  // 🔥 ACTIVE BUDGET (TIME BASED)
   Budget? getActiveBudget() {
     final now = DateTime.now();
 
@@ -47,80 +57,122 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void loadBudgets() async {
-    final data = await DBHelper.getBudgets();
+  // 🔥 EXPENSE INSIDE BUDGET RANGE
+  double getBudgetExpense() {
+    if (activeBudget == null) return 0;
 
-    setState(() {
-      budgets = data;
-      budget = null;
+    final relevant = expenses.where((e) {
+      return e.date.isAfter(activeBudget!.startDate) &&
+          e.date.isBefore(activeBudget!.endDate.add(const Duration(days: 1)));
     });
+
+    return relevant.fold(0, (sum, e) => sum + e.amount);
   }
 
   double getTotalExpense() {
     return expenses.fold(0, (sum, e) => sum + e.amount);
   }
 
-  bool isNearLimit() {
-    if (budget == null) return false;
-    return getTotalExpense() >= (budget!.amount * 0.9);
+  // 🔥 SMART ALERT SYSTEM
+  void checkBudgetAlerts() {
+    if (activeBudget == null) return;
+
+    final used = getBudgetExpense();
+    final percent = (used / activeBudget!.amount) * 100;
+
+    String? message;
+
+    if (percent >= 100 && lastAlertPercent < 100) {
+      message = "❌ Budget exceeded!";
+    } else if (percent >= 80 && lastAlertPercent < 80) {
+      message = "🚨 80% budget used!";
+    } else if (percent >= 50 && lastAlertPercent < 50) {
+      message = "⚠ 50% budget used!";
+    }
+
+    if (message != null) {
+      lastAlertPercent = percent;
+
+      ScaffoldMessenger.of(context).showMaterialBanner(
+        MaterialBanner(
+          content: Text(message),
+          backgroundColor: percent >= 100
+              ? Colors.red
+              : percent >= 80
+              ? Colors.orange
+              : Colors.yellow,
+          actions: [
+            TextButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+              },
+              child: const Text("DISMISS"),
+            ),
+          ],
+        ),
+      );
+      Future.delayed(const Duration(seconds: 3), () {
+        ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+      });
+    }
   }
 
+  // 🔥 ADD EXPENSE
   void addExpense(Expense expense) async {
     await DBHelper.insertExpense(expense);
-
-    setState(() {
-      expenses.add(expense);
-    });
+    loadData();
   }
 
+  // 🔥 DELETE
   void deleteExpense(int index) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text("Confirm Delete"),
-        content: Text("Are you sure you want to delete this expense?"),
+        title: const Text("Confirm Delete"),
+        content: const Text("Are you sure?"),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text("Cancel"),
+            child: const Text("Cancel"),
           ),
           TextButton(
             onPressed: () async {
               final expense = expenses[index];
 
-              // ✅ DELETE FROM DATABASE
               if (expense.id != null) {
                 await DBHelper.deleteExpense(expense.id!);
               }
 
-              // ✅ UPDATE UI
-              setState(() {
-                expenses.removeAt(index);
-              });
-
               Navigator.pop(ctx);
+              loadData();
             },
-            child: Text("Delete", style: TextStyle(color: Colors.red)),
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
   }
 
-  void setBudget(Budget newBudget) async {
-    await DBHelper.insertBudget(newBudget);
+  // 🔥 SET BUDGET
+  void setBudget(Budget b) async {
+    await DBHelper.insertBudget(b);
+    loadData();
+  }
 
-    loadBudgets(); // reload from DB
+  // 🔥 PROGRESS %
+  double getBudgetPercent() {
+    if (activeBudget == null) return 0;
+    return getBudgetExpense() / activeBudget!.amount;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("TrackMyCash 💰"),
+        title: const Text("TrackMyCash 💰"),
         actions: [
           IconButton(
-            icon: Icon(Icons.pie_chart),
+            icon: const Icon(Icons.pie_chart),
             onPressed: () {
               Navigator.push(
                 context,
@@ -130,54 +182,64 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
-          IconButton(
-            icon: Icon(Icons.account_balance_wallet),
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => BudgetScreen(existingBudget: budget),
-                ),
-              );
 
-              if (result != null) setBudget(result);
+          // 🔥 OPEN BUDGET HISTORY
+          IconButton(
+            icon: const Icon(Icons.account_balance_wallet),
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => BudgetHistoryScreen()),
+              );
+              loadData();
             },
           ),
         ],
       ),
+
       body: Column(
         children: [
-          if (budget != null)
-            Padding(
-              padding: EdgeInsets.all(10),
-              child: Text(
-                "Budget: Rs ${budget!.amount}",
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
+          // 🔥 ACTIVE BUDGET CARD
+          if (activeBudget != null)
+            Card(
+              margin: const EdgeInsets.all(10),
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  children: [
+                    Text(
+                      "Budget (${activeBudget!.period})",
+                      style: const TextStyle(fontSize: 16),
+                    ),
 
-          if (isNearLimit())
-            Container(
-              width: double.infinity,
-              color: Colors.red,
-              padding: EdgeInsets.all(8),
-              child: Text(
-                "⚠ Budget almost exceeded!",
-                style: TextStyle(color: Colors.white),
+                    const SizedBox(height: 5),
+
+                    Text(
+                      "Rs ${getBudgetExpense().toStringAsFixed(0)} / ${activeBudget!.amount}",
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    LinearProgressIndicator(
+                      value: getBudgetPercent().clamp(0, 1),
+                      minHeight: 8,
+                    ),
+                  ],
+                ),
               ),
             ),
 
           Padding(
-            padding: EdgeInsets.all(10),
+            padding: const EdgeInsets.all(10),
             child: Text(
               "Total Expense: Rs ${getTotalExpense()}",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
 
           Expanded(
             child: expenses.isEmpty
-                ? Center(child: Text("No expenses yet"))
+                ? const Center(child: Text("No expenses yet"))
                 : ListView.builder(
                     itemCount: expenses.length,
                     itemBuilder: (context, index) {
@@ -195,15 +257,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           );
 
                           if (updated != null) {
-                            // 🔥 UPDATE DATABASE FIRST
-                            if (updated.id != null) {
-                              await DBHelper.updateExpense(updated);
-                            }
-
-                            // 🔥 THEN UPDATE UI
-                            setState(() {
-                              expenses[index] = updated;
-                            });
+                            await DBHelper.updateExpense(updated);
+                            loadData();
                           }
                         },
                       );
@@ -212,6 +267,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final newExpense = await Navigator.push(
@@ -221,7 +277,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           if (newExpense != null) addExpense(newExpense);
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }

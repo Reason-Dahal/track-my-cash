@@ -4,16 +4,25 @@ import '../models/expense.dart';
 class AddExpenseScreen extends StatefulWidget {
   final Expense? existingExpense;
 
-  AddExpenseScreen({this.existingExpense});
+  const AddExpenseScreen({super.key, this.existingExpense});
 
   @override
-  _AddExpenseScreenState createState() => _AddExpenseScreenState();
+  State<AddExpenseScreen> createState() => _AddExpenseScreenState();
 }
 
 class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final amountController = TextEditingController();
   final descriptionController = TextEditingController();
   final customCategoryController = TextEditingController();
+
+  final List<String> categories = [
+    "Food",
+    "Clothing",
+    "Transportation",
+    "Health",
+    "Entertainment",
+    "Other",
+  ];
 
   String category = "Food";
   bool isCustom = false;
@@ -24,12 +33,21 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     super.initState();
 
     if (widget.existingExpense != null) {
-      amountController.text = widget.existingExpense!.amount.toString();
+      final e = widget.existingExpense!;
 
-      descriptionController.text = widget.existingExpense!.description;
+      amountController.text = e.amount.toString();
+      descriptionController.text = e.description;
+      selectedDate = e.date;
 
-      category = widget.existingExpense!.category;
-      selectedDate = widget.existingExpense!.date;
+      // 🔥 HANDLE CUSTOM CATEGORY SAFELY
+      if (categories.contains(e.category)) {
+        category = e.category;
+        isCustom = false;
+      } else {
+        category = "Other";
+        isCustom = true;
+        customCategoryController.text = e.category;
+      }
     }
   }
 
@@ -39,33 +57,35 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Enter valid amount")));
+      ).showSnackBar(const SnackBar(content: Text("Enter valid amount")));
       return;
     }
 
     if (selectedDate.isAfter(DateTime.now())) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Future date not allowed")));
+      ).showSnackBar(const SnackBar(content: Text("Future date not allowed")));
       return;
     }
 
-    String finalCategory = isCustom ? customCategoryController.text : category;
+    final finalCategory = isCustom
+        ? customCategoryController.text.trim()
+        : category;
 
     if (finalCategory.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Enter category")));
+      ).showSnackBar(const SnackBar(content: Text("Enter category")));
       return;
     }
 
     Navigator.pop(
       context,
       Expense(
-        id: widget.existingExpense?.id, // MUST HAVE
+        id: widget.existingExpense?.id, // 🔥 IMPORTANT FOR EDIT
         amount: amount,
         category: finalCategory,
-        description: descriptionController.text,
+        description: descriptionController.text.trim(),
         date: selectedDate,
       ),
     );
@@ -88,36 +108,38 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final safeCategory = categories.contains(category) ? category : "Other";
+
     return Scaffold(
-      appBar: AppBar(title: Text("Add Expense")),
+      appBar: AppBar(
+        title: Text(
+          widget.existingExpense == null ? "Add Expense" : "Edit Expense",
+        ),
+      ),
       body: Padding(
-        padding: EdgeInsets.all(12),
+        padding: const EdgeInsets.all(12),
         child: Column(
           children: [
             TextField(
               controller: amountController,
-              decoration: InputDecoration(labelText: "Amount"),
+              decoration: const InputDecoration(labelText: "Amount"),
               keyboardType: TextInputType.number,
             ),
 
             TextField(
               controller: descriptionController,
-              decoration: InputDecoration(labelText: "Description"),
+              decoration: const InputDecoration(labelText: "Description"),
             ),
 
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
 
+            // 🔥 FIXED DROPDOWN
             DropdownButton<String>(
-              value: category,
+              value: safeCategory,
               isExpanded: true,
-              items: [
-                "Food",
-                "Clothing",
-                "Transportation",
-                "Health",
-                "Entertainment",
-                "Other",
-              ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+              items: categories
+                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                  .toList(),
               onChanged: (val) {
                 setState(() {
                   category = val!;
@@ -129,24 +151,34 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             if (isCustom)
               TextField(
                 controller: customCategoryController,
-                decoration: InputDecoration(labelText: "Custom Category"),
+                decoration: const InputDecoration(labelText: "Custom Category"),
               ),
 
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
 
             Row(
               children: [
                 Text(
                   "Date: ${selectedDate.toLocal().toString().split(' ')[0]}",
                 ),
-                Spacer(),
-                TextButton(onPressed: pickDate, child: Text("Select Date")),
+                const Spacer(),
+                TextButton(
+                  onPressed: pickDate,
+                  child: const Text("Select Date"),
+                ),
               ],
             ),
 
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
 
-            ElevatedButton(onPressed: submit, child: Text("Add Expense")),
+            ElevatedButton(
+              onPressed: submit,
+              child: Text(
+                widget.existingExpense == null
+                    ? "Add Expense"
+                    : "Update Expense",
+              ),
+            ),
           ],
         ),
       ),

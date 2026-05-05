@@ -17,17 +17,42 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<Expense> expenses = [];
   Budget? budget;
+  List<Budget> budgets = [];
 
   @override
   void initState() {
     super.initState();
     loadExpenses();
+    loadBudgets();
   }
 
   void loadExpenses() async {
     final data = await DBHelper.getExpenses();
     setState(() {
       expenses = data;
+    });
+  }
+
+  Budget? getActiveBudget() {
+    final now = DateTime.now();
+
+    try {
+      return budgets.firstWhere(
+        (b) =>
+            (now.isAfter(b.startDate) || now.isAtSameMomentAs(b.startDate)) &&
+            (now.isBefore(b.endDate) || now.isAtSameMomentAs(b.endDate)),
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  void loadBudgets() async {
+    final data = await DBHelper.getBudgets();
+
+    setState(() {
+      budgets = data;
+      budget = null;
     });
   }
 
@@ -82,10 +107,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void setBudget(Budget newBudget) {
-    setState(() {
-      budget = newBudget;
-    });
+  void setBudget(Budget newBudget) async {
+    await DBHelper.insertBudget(newBudget);
+
+    loadBudgets(); // reload from DB
   }
 
   @override
@@ -110,7 +135,9 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () async {
               final result = await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => BudgetScreen()),
+                MaterialPageRoute(
+                  builder: (_) => BudgetScreen(existingBudget: budget),
+                ),
               );
 
               if (result != null) setBudget(result);

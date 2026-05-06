@@ -36,36 +36,45 @@ class _ReportScreenState extends State<ReportScreen> {
     setState(() {
       filteredExpenses = widget.expenses.where((e) {
         if (startDate == null || endDate == null) return true;
-        return e.date.isAfter(startDate!) &&
+
+        return e.date.isAfter(startDate!.subtract(const Duration(days: 1))) &&
             e.date.isBefore(endDate!.add(const Duration(days: 1)));
       }).toList();
     });
   }
 
-  // 🔥 CUSTOM DATE PICKER
-  Future<void> pickCustomRange() async {
-    final pickedStart = await showDatePicker(
+  // 🔥 PICK START DATE
+  Future<void> pickStartDate() async {
+    final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: startDate ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
     );
 
-    if (pickedStart == null) return;
+    if (picked != null) {
+      setState(() {
+        startDate = picked;
+      });
+      applyFilter();
+    }
+  }
 
-    final pickedEnd = await showDatePicker(
+  // 🔥 PICK END DATE
+  Future<void> pickEndDate() async {
+    final picked = await showDatePicker(
       context: context,
-      initialDate: pickedStart,
-      firstDate: pickedStart,
+      initialDate: endDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
       lastDate: DateTime.now(),
     );
 
-    if (pickedEnd == null) return;
-
-    startDate = pickedStart;
-    endDate = pickedEnd;
-
-    applyFilter();
+    if (picked != null) {
+      setState(() {
+        endDate = picked;
+      });
+      applyFilter();
+    }
   }
 
   // 🔥 CATEGORY TOTALS
@@ -126,7 +135,7 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  // 🔥 BAR CHART
+  // 🔥 BAR CHART (FIXED CLEAN VERSION)
   Widget buildBarChart() {
     final data = getCategoryTotals();
 
@@ -150,8 +159,13 @@ class _ReportScreenState extends State<ReportScreen> {
               ],
             );
           }).toList(),
+
           titlesData: FlTitlesData(
-            leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true)),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(showTitles: false), // ✅ FIX
+            ),
+            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
@@ -199,6 +213,7 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
+  // 🔥 FILTER BUTTONS
   Widget buildFilterButtons() {
     return Wrap(
       spacing: 8,
@@ -223,7 +238,45 @@ class _ReportScreenState extends State<ReportScreen> {
           onPressed: () => applyFilter(days: 365),
           child: const Text("1Y"),
         ),
-        ElevatedButton(onPressed: pickCustomRange, child: const Text("Custom")),
+        ElevatedButton(
+          onPressed: () {
+            setState(() {
+              startDate = null;
+              endDate = null;
+            });
+          },
+          child: const Text("Custom"),
+        ),
+      ],
+    );
+  }
+
+  // 🔥 CUSTOM DATE RANGE UI
+  Widget buildCustomDatePicker() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Text(
+              startDate == null
+                  ? "Start Date"
+                  : startDate!.toLocal().toString().split(' ')[0],
+            ),
+            const Spacer(),
+            TextButton(onPressed: pickStartDate, child: const Text("Select")),
+          ],
+        ),
+        Row(
+          children: [
+            Text(
+              endDate == null
+                  ? "End Date"
+                  : endDate!.toLocal().toString().split(' ')[0],
+            ),
+            const Spacer(),
+            TextButton(onPressed: pickEndDate, child: const Text("Select")),
+          ],
+        ),
       ],
     );
   }
@@ -237,6 +290,11 @@ class _ReportScreenState extends State<ReportScreen> {
         child: Column(
           children: [
             buildFilterButtons(),
+
+            const SizedBox(height: 10),
+
+            buildCustomDatePicker(), // ✅ NEW
+
             const SizedBox(height: 15),
 
             Text(

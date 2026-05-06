@@ -68,15 +68,16 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       return;
     }
 
-    final finalCategory = isCustom
-        ? customCategoryController.text.trim()
-        : category;
+    String finalCategory;
 
-    if (finalCategory.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Enter category")));
-      return;
+    if (isCustom) {
+      if (customCategoryController.text.trim().isEmpty) {
+        finalCategory = "Other"; // ✅ fallback
+      } else {
+        finalCategory = customCategoryController.text.trim();
+      }
+    } else {
+      finalCategory = category;
     }
 
     Navigator.pop(

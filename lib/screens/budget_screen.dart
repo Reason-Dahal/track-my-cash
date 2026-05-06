@@ -126,7 +126,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
   }
 
   // 🔥 SAVE OR UPDATE
-  void submit() async {
+  void submit() {
     final amount = double.tryParse(amountController.text);
 
     if (amount == null || amount <= 0) {
@@ -147,7 +147,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
       calculateDates();
     }
 
-    final newBudget = Budget(
+    final budget = Budget(
       id: widget.existingBudget?.id,
       amount: amount,
       startDate: startDate,
@@ -155,16 +155,21 @@ class _BudgetScreenState extends State<BudgetScreen> {
       period: selectedPeriod,
     );
 
-    if (widget.existingBudget != null) {
-      await DBHelper.updateBudget(newBudget);
-    } else {
-      await DBHelper.insertBudget(newBudget);
-    }
+    // ✅ SHOW CONFIRMATION FIRST
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          widget.existingBudget == null
+              ? "✅ Budget Created"
+              : "✅ Budget Updated",
+        ),
+      ),
+    );
 
-    loadBudgets();
-
-    // clear form after save
-    amountController.clear();
+    // ✅ DELAY THEN CLOSE
+    Future.delayed(const Duration(milliseconds: 500), () {
+      Navigator.pop(context, budget);
+    });
   }
 
   @override

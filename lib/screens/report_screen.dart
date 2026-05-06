@@ -24,7 +24,7 @@ class _ReportScreenState extends State<ReportScreen> {
     applyFilter(days: 7); // default
   }
 
-  // 🔥 FILTER LOGIC
+  //FILTER LOGIC
   void applyFilter({int? days}) {
     final now = DateTime.now();
 
@@ -43,7 +43,7 @@ class _ReportScreenState extends State<ReportScreen> {
     });
   }
 
-  // 🔥 PICK START DATE
+  //PICK START DATE
   Future<void> pickStartDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -60,7 +60,7 @@ class _ReportScreenState extends State<ReportScreen> {
     }
   }
 
-  // 🔥 PICK END DATE
+  // PICK END DATE
   Future<void> pickEndDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -77,7 +77,7 @@ class _ReportScreenState extends State<ReportScreen> {
     }
   }
 
-  // 🔥 CATEGORY TOTALS
+  //CATEGORY TOTALS
   Map<String, double> getCategoryTotals() {
     Map<String, double> data = {};
 
@@ -101,7 +101,7 @@ class _ReportScreenState extends State<ReportScreen> {
     Colors.teal,
   ];
 
-  // 🔥 PIE CHART
+  // PIE CHART
   Widget buildPieChart() {
     final data = getCategoryTotals();
 
@@ -135,7 +135,7 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  // 🔥 BAR CHART (FIXED CLEAN VERSION)
+  // BAR CHART
   Widget buildBarChart() {
     final data = getCategoryTotals();
 
@@ -161,9 +161,7 @@ class _ReportScreenState extends State<ReportScreen> {
           }).toList(),
 
           titlesData: FlTitlesData(
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(showTitles: false), // ✅ FIX
-            ),
+            leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
             topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
             rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
             bottomTitles: AxisTitles(
@@ -186,7 +184,7 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  // 🔥 LEGEND
+  // LEGEND
   Widget buildLegend() {
     final data = getCategoryTotals();
 
@@ -213,7 +211,7 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  // 🔥 FILTER BUTTONS
+  // FILTER BUTTONS
   Widget buildFilterButtons() {
     return Wrap(
       spacing: 8,
@@ -232,7 +230,7 @@ class _ReportScreenState extends State<ReportScreen> {
         ),
         ElevatedButton(
           onPressed: () => applyFilter(days: 180),
-          child: const Text("6M"),
+          child: const Text("180D"),
         ),
         ElevatedButton(
           onPressed: () => applyFilter(days: 365),
@@ -251,7 +249,7 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  // 🔥 CUSTOM DATE RANGE UI
+  // CUSTOM DATE RANGE UI
   Widget buildCustomDatePicker() {
     return Column(
       children: [
@@ -293,7 +291,7 @@ class _ReportScreenState extends State<ReportScreen> {
 
             const SizedBox(height: 10),
 
-            buildCustomDatePicker(), // ✅ NEW
+            buildCustomDatePicker(),
 
             const SizedBox(height: 15),
 

@@ -39,7 +39,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       descriptionController.text = e.description;
       selectedDate = e.date;
 
-      // 🔥 HANDLE CUSTOM CATEGORY SAFELY
+      // HANDLE CUSTOM CATEGORY SAFELY
       if (categories.contains(e.category)) {
         category = e.category;
         isCustom = false;
@@ -72,7 +72,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
     if (isCustom) {
       if (customCategoryController.text.trim().isEmpty) {
-        finalCategory = "Other"; // ✅ fallback
+        finalCategory = "Other"; //fallback
       } else {
         finalCategory = customCategoryController.text.trim();
       }
@@ -83,7 +83,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     Navigator.pop(
       context,
       Expense(
-        id: widget.existingExpense?.id, // 🔥 IMPORTANT FOR EDIT
+        id: widget.existingExpense?.id, // IMPORTANT FOR EDIT
         amount: amount,
         category: finalCategory,
         description: descriptionController.text.trim(),
@@ -134,7 +134,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
             const SizedBox(height: 10),
 
-            // 🔥 FIXED DROPDOWN
+            //FIXED DROPDOWN
             DropdownButton<String>(
               value: safeCategory,
               isExpanded: true,

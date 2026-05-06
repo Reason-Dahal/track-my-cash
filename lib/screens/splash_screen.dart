@@ -17,14 +17,14 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
 
-    // 🔥 ANIMATION CONTROLLER
+    //ANIMATION CONTROLLER
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(seconds: 1),
     )..repeat();
 
-    // 🔥 NAVIGATE TO HOME AFTER DELAY
-    Timer(const Duration(seconds: 3), () {
+    //  NAVIGATE TO HOME AFTER DELAY
+    Timer(const Duration(milliseconds: 1200), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const HomeScreen()),
@@ -38,12 +38,12 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
-  // 🔥 ROTATING LOADER
+  // ROTATING LOADER
   Widget buildLoader() {
     return RotationTransition(
       turns: _controller,
       child: const Icon(
-        Icons.currency_rupee, // 💰 change if you want
+        Icons.currency_exchange, // 💰 change if you want
         size: 50,
         color: Colors.white,
       ),
@@ -58,7 +58,7 @@ class _SplashScreenState extends State<SplashScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 🔥 APP TITLE
+            //APP TITLE
             const Text(
               "TrackMyCash",
               style: TextStyle(
@@ -70,7 +70,7 @@ class _SplashScreenState extends State<SplashScreen>
 
             const SizedBox(height: 20),
 
-            // 🔥 LOADER
+            // LOADER
             buildLoader(),
 
             const SizedBox(height: 20),
@@ -80,7 +80,7 @@ class _SplashScreenState extends State<SplashScreen>
         ),
       ),
 
-      // 🔥 FOOTER TEXT
+      // FOOTER TEXT
       bottomNavigationBar: const Padding(
         padding: EdgeInsets.all(12),
         child: Text(

@@ -155,7 +155,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
       period: selectedPeriod,
     );
 
-    // ✅ SHOW CONFIRMATION FIRST
+    // SHOW CONFIRMATION FIRST
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -166,7 +166,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
       ),
     );
 
-    // ✅ DELAY THEN CLOSE
+    // DELAY THEN CLOSE
     Future.delayed(const Duration(milliseconds: 500), () {
       Navigator.pop(context, budget);
     });
@@ -262,9 +262,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
                               "${b.endDate.toLocal().toString().split(' ')[0]}",
                             ),
 
-                            // 🔥 ACTION BUTTONS
+                            // ACTION BUTTONS
                             trailing: SizedBox(
-                              width: 100, // 👈 gives enough space
+                              width: 100, //  gives enough space
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [

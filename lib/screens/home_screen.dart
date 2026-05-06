@@ -28,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
     loadData();
   }
 
-  // 🔥 LOAD EVERYTHING
+  //LOAD EVERYTHING
   void loadData() async {
     final exp = await DBHelper.getExpenses();
     final bud = await DBHelper.getBudgets();
@@ -42,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
     checkBudgetAlerts();
   }
 
-  // 🔥 ACTIVE BUDGET (TIME BASED)
+  //  ACTIVE BUDGET (TIME BASED)
   Budget? getActiveBudget() {
     final now = DateTime.now();
 
@@ -57,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // 🔥 EXPENSE INSIDE BUDGET RANGE
+  // EXPENSE INSIDE BUDGET RANGE
   double getBudgetExpense() {
     if (activeBudget == null) return 0;
 
@@ -73,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return expenses.fold(0, (sum, e) => sum + e.amount);
   }
 
-  // 🔥 SMART ALERT SYSTEM
+  //SMART ALERT SYSTEM
   void checkBudgetAlerts() {
     if (activeBudget == null) return;
 
@@ -117,13 +117,13 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // 🔥 ADD EXPENSE
+  // ADD EXPENSE
   void addExpense(Expense expense) async {
     await DBHelper.insertExpense(expense);
     loadData();
   }
 
-  // 🔥 DELETE
+  //  DELETE
   void deleteExpense(int index) {
     showDialog(
       context: context,
@@ -153,13 +153,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 🔥 SET BUDGET
+  //  SET BUDGET
   void setBudget(Budget b) async {
     await DBHelper.insertBudget(b);
     loadData();
   }
 
-  // 🔥 PROGRESS %
+  // PROGRESS %
   double getBudgetPercent() {
     if (activeBudget == null) return 0;
     return getBudgetExpense() / activeBudget!.amount;
@@ -169,7 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("TrackMyCash 💰"),
+        title: const Text("TrackMyCash"),
         actions: [
           IconButton(
             icon: const Icon(Icons.pie_chart),
@@ -183,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
 
-          // 🔥 OPEN BUDGET HISTORY
+          // OPEN BUDGET HISTORY
           IconButton(
             icon: const Icon(Icons.account_balance_wallet),
             onPressed: () async {
@@ -199,7 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       body: Column(
         children: [
-          // 🔥 ACTIVE BUDGET CARD
+          // ACTIVE BUDGET CARD
           if (activeBudget != null)
             Card(
               margin: const EdgeInsets.all(10),
